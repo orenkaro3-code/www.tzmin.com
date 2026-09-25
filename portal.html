@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07060a">
+<meta name="robots" content="noindex">
+<title>TAZMIN — אזור לקוח</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#07060a;--card:rgba(20,18,24,.78);--ink:#f4efe8;--muted:#b9b1a8;--a:#e8b04b;--a-ink:#0a0806;--line:rgba(244,239,232,.14);--ok:#5fd39a;--warn:#ffb74d;--err:#ff7a7a;
+  --display:'Anton','Heebo',Impact,sans-serif;--body:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;background:radial-gradient(35% 30% at 20% 15%,rgba(232,176,75,.18),transparent 70%),radial-gradient(40% 35% at 85% 80%,rgba(232,176,75,.10),transparent 70%);filter:blur(30px)}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--a)}
+:focus-visible{outline:3px solid var(--a);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border-radius:999px;border:0;background:var(--a);color:var(--a-ink);font-weight:700;cursor:pointer;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:.88rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.in{width:100%;min-height:46px;padding:10px 14px;border-radius:12px;border:1px solid rgba(244,239,232,.22);background:rgba(255,255,255,.05);outline:none}
+.in:focus{border-color:var(--a)}
+textarea.in{resize:vertical;min-height:46px}
+label{font-weight:600;font-size:.92rem}
+.muted{color:var(--muted)}
+.err{color:var(--err);min-height:1.2em;font-size:.9rem}
+
+/* login */
+.login{min-height:100%;display:grid;place-items:center;padding:24px}
+.login .box{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:26px;padding:32px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.brand{font-family:var(--display);letter-spacing:.14em;font-size:1.5rem;direction:ltr;text-align:start}
+.login h1{font-size:2rem;margin:10px 0 6px;line-height:1.1}
+.f{margin-top:16px;display:grid;gap:6px}
+.switch{background:none;border:0;color:var(--a);text-decoration:underline;cursor:pointer;padding:8px 0;margin-top:12px}
+
+/* app */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(12px,3vw,28px);background:rgba(7,6,10,.8);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top .who{display:flex;gap:10px;align-items:center;min-width:0}
+.top .who b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shell{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100% - 64px)}
+.shell.client{grid-template-columns:minmax(0,1fr)}
+@media (max-width:900px){.shell{grid-template-columns:1fr}.side{border-inline-start:0!important;border-bottom:1px solid var(--line);max-height:44vh;overflow:auto}}
+.side{border-inline-end:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:.85rem}
+.tab[aria-pressed="true"]{background:var(--a);color:var(--a-ink);border-color:var(--a);font-weight:700}
+.clist{display:flex;flex-direction:column;gap:8px}
+.citem{text-align:start;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;display:grid;gap:2px}
+.citem[aria-current="true"]{border-color:var(--a);background:rgba(232,176,75,.08)}
+.citem .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.badge{font-size:.72rem;padding:2px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.b-pending{border-color:var(--warn);color:var(--warn)}
+.b-approved{border-color:var(--ok);color:var(--ok)}
+.b-done{border-color:var(--a);color:var(--a)}
+.dot{min-width:20px;height:20px;border-radius:10px;background:var(--err);color:#fff;font-size:.72rem;display:grid;place-items:center;padding:0 6px;font-weight:700}
+.main{padding:clamp(12px,2.4vw,24px);min-width:0}
+.grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);gap:16px;align-items:start}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.card h2{font-size:1.1rem;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.stack{display:grid;gap:16px}
+.frame{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#000;aspect-ratio:16/10}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.frame .empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--a);width:0;transition:width .5s}
+.plist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.plist li{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+.plist .t{flex:1;min-width:0;word-break:break-word}
+.state{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:.78rem;white-space:nowrap;background:transparent;cursor:default}
+button.state{cursor:pointer}
+.s-requested{color:var(--warn);border-color:var(--warn)}
+.s-doing{color:#7fb2ff;border-color:#7fb2ff}
+.s-done{color:var(--ok);border-color:var(--ok)}
+.cat{font-size:.72rem;color:var(--muted)}
+.pay{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.pay div{border:1px solid var(--line);border-radius:12px;padding:10px}
+.pay b{display:block;font-size:1.3rem}
+.adm{display:grid;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.adm .r{display:flex;gap:8px;flex-wrap:wrap}
+.adm .r>*{flex:1 1 120px}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:min(78vh,760px)}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px 2px;overscroll-behavior:contain}
+.m{max-width:84%;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid var(--line);align-self:flex-start;word-break:break-word}
+.m.me{align-self:flex-end;background:rgba(232,176,75,.16);border-color:rgba(232,176,75,.4)}
+.m.req{border-color:var(--warn);border-style:dashed}
+.m small{display:block;color:var(--muted);font-size:.72rem;margin-top:4px}
+.m .tagr{display:inline-block;font-size:.72rem;color:var(--warn);margin-bottom:4px;font-weight:700}
+.m img{max-width:100%;border-radius:10px;margin-top:6px;display:block}
+.fbtn{margin-top:6px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;text-align:start;display:block;width:100%}
+.compose{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
+.compose .r{display:flex;gap:8px;align-items:flex-end}
+.compose textarea{flex:1;max-height:160px}
+.icon{min-width:46px;min-height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer;font-size:1.1rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1px solid var(--line);display:inline-flex;gap:6px;align-items:center}
+.chip button{background:none;border:0;cursor:pointer;color:var(--muted);padding:0 2px}
+.reqbox{display:none;gap:8px;padding:10px;border:1px dashed var(--warn);border-radius:12px}
+.reqbox.open{display:grid}
+.pendingbox{text-align:center;padding:40px 20px}
+.big{font-family:var(--display);font-size:clamp(3rem,10vw,6rem);color:var(--a);direction:ltr;line-height:.9}
+.linkbox{display:flex;gap:6px;align-items:center}
+.linkbox input{direction:ltr}
+.toast{position:fixed;z-index:50;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;translate:-50% 0;background:#16151b;border:1px solid var(--a);border-radius:12px;padding:10px 18px;display:none;max-width:90vw}
+.toast.show{display:block}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast" role="status"></div>
+
+<!-- LOGIN -->
+<section class="login" id="login" hidden>
+  <div class="box">
+    <div class="brand">TAZMIN</div>
+    <div id="lgClient">
+      <h1>אזור לקוח</h1>
+      <p class="muted">הכניסו את הקוד שקיבלתם כדי להיכנס לצ׳אט ולראות את ההתקדמות.</p>
+      <form id="codeForm" novalidate>
+        <div class="f"><label for="codeIn">קוד כניסה</label><input class="in" id="codeIn" dir="ltr" autocomplete="off" autocapitalize="characters" maxlength="12" required></div>
+        <p class="err" id="codeErr" role="alert"></p>
+        <button class="btn" type="submit" style="width:100%">כניסה</button>
+      </form>
+      <button class="switch" type="button" id="toAdmin">כניסת מנהל</button>
+    </div>
+    <div id="lgAdmin" hidden>
+      <h1>כניסת מנהל</h1>
+      <form id="admForm" novalidate>
+        <div class="f"><label for="aEmail">אימייל</label><input class="in" id="aEmail" type="email" dir="ltr" autocomplete="username" required></div>
+        <div class="f"><label for="aPass">סיסמה</label><input class="in" id="aPass" type="password" dir="ltr" autocomplete="current-password" required></div>
+        <p class="err" id="admErr" role="alert"></p>
+        <button class="btn" type="submit" style="width:100%">כניסה</button>
+      </form>
+      <button class="switch" type="button" id="toClient">כניסת לקוח עם קוד</button>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="who"><span class="brand">TAZMIN</span><b id="topName"></b></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn ghost sm" type="button" id="newBtn" hidden>+ לקוח חדש</button>
+      <button class="btn ghost sm" type="button" id="logout">יציאה</button>
+    </div>
+  </header>
+  <div class="shell" id="shell">
+    <aside class="side" id="side" hidden aria-label="רשימת לקוחות">
+      <div class="tabs" role="group" aria-label="סינון">
+        <button class="tab" type="button" data-f="pending" aria-pressed="true">ממתינים</button>
+        <button class="tab" type="button" data-f="approved" aria-pressed="false">פעילים</button>
+        <button class="tab" type="button" data-f="done" aria-pressed="false">הושלמו</button>
+        <button class="tab" type="button" data-f="all" aria-pressed="false">הכול</button>
+      </div>
+      <input class="in" id="search" type="search" placeholder="חיפוש לקוח" aria-label="חיפוש לקוח">
+      <div class="clist" id="clist"></div>
+    </aside>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var d = document;
+  function $(id) { return d.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function st(k, v, ses) { try { var S = ses ? sessionStorage : localStorage; if (v === undefined) return S.getItem(k); if (v === null) S.removeItem(k); else S.setItem(k, v); } catch (e) { return null; } }
+  function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove('show'); }, 3000); }
+  function fmtT(t) { var x = new Date(t); return x.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) + ' ' + x.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); }
+  function money(n) { return '₪' + (Math.round((+n || 0) * 100) / 100).toLocaleString('he-IL'); }
+  var STATE = { requested: 'ביקשו', doing: 'בעבודה', done: 'בוצע' };
+  var CS = { pending: 'ממתין לאישור', approved: 'פעיל', done: 'הושלם', archived: 'בארכיון' };
+  var CATS = ['אתר', 'רשתות חברתיות', 'סרטונים', 'קידום', 'מודעות', 'אחר'];
+
+  var S = { mode: null, code: null, admin: null, client: null, msgs: [], clients: [], sel: null, filter: 'pending', q: '', att: { links: [], file: null }, poll: 0, lastCount: -1 };
+
+  function api(a, opts) {
+    opts = opts || {};
+    var h = { 'Content-Type': 'application/json' };
+    if (S.mode === 'client') h['x-code'] = S.code;
+    if (S.mode === 'admin' && S.admin) { h['x-admin-email'] = S.admin.email; h['x-admin-pass'] = S.admin.pass; }
+    return fetch('/api/portal?a=' + a + (opts.q || ''), { method: opts.body ? 'POST' : 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store' })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.error || 'error'); e.status = r.status; throw e; } return j; }); });
+  }
+  function errText(e) {
+    var m = e && e.message;
+    if (m === 'db_not_connected') return 'מסד הנתונים עוד לא מחובר לאתר.';
+    if (m === 'no_admin_password') return 'עדיין לא הוגדרה סיסמת מנהל (ADMIN_PASSWORD) ב-Vercel.';
+    if (m === 'unauthorized') return 'אימייל או סיסמה שגויים.';
+    if (m === 'bad_code') return 'הקוד לא נמצא. בדקו שהקלדתם נכון.';
+    if (m === 'file_too_big') return 'הקובץ גדול מדי (עד 600KB). אפשר לשלוח קישור במקום.';
+    if (m === 'pending') return 'הצ׳אט ייפתח אחרי אישור.';
+    return 'משהו השתבש. נסו שוב.';
+  }
+
+  /* ---------- LOGIN ---------- */
+  function showLogin(admin) { $('app').hidden = true; $('login').hidden = false; $('lgAdmin').hidden = !admin; $('lgClient').hidden = !!admin; setTimeout(function () { (admin ? $('aEmail') : $('codeIn')).focus(); }, 30); }
+  $('toAdmin').onclick = function () { showLogin(true); };
+  $('toClient').onclick = function () { showLogin(false); };
+  $('codeForm').addEventListener('submit', function (e) { e.preventDefault(); var c = $('codeIn').value.trim().toUpperCase(); if (c.length < 6) { $('codeErr').textContent = 'נא להקליד את הקוד המלא.'; return; } enterClient(c, $('codeErr')); });
+  $('admForm').addEventListener('submit', function (e) {
+    e.preventDefault(); S.mode = 'admin'; S.admin = { email: $('aEmail').value.trim().toLowerCase(), pass: $('aPass').value };
+    api('login').then(function () { st('tzp_admin', JSON.stringify(S.admin), true); startAdmin(); }).catch(function (er) { S.mode = null; S.admin = null; $('admErr').textContent = errText(er); });
+  });
+  $('logout').onclick = function () { clearInterval(S.poll); st('tzp_code', null); st('tzp_admin', null, true); S = Object.assign(S, { mode: null, code: null, admin: null, client: null, sel: null }); history.replaceState(null, '', location.pathname); showLogin(false); };
+
+  /* ---------- CLIENT ---------- */
+  function enterClient(code, errEl) {
+    S.mode = 'client'; S.code = code;
+    api('me').then(function (j) {
+      st('tzp_code', code); S.client = j.client; S.msgs = j.msgs || [];
+      $('login').hidden = true; $('app').hidden = false; $('side').hidden = true; $('newBtn').hidden = true; $('shell').className = 'shell client';
+      $('topName').textContent = j.client.bizName || j.client.name || '';
+      renderMain(true); clearInterval(S.poll); S.poll = setInterval(pollClient, 4000);
+    }).catch(function (er) { S.mode = null; st('tzp_code', null); if (errEl) errEl.textContent = errText(er); showLogin(false); if (errEl) errEl.textContent = errText(er); });
+  }
+  function pollClient() { if (d.hidden) return; api('me').then(function (j) { var changed = JSON.stringify(j.client) !== JSON.stringify(S.client) || (j.msgs || []).length !== S.msgs.length; S.client = j.client; S.msgs = j.msgs || []; if (changed) renderMain(false); }).catch(function () {}); }
+
+  /* ---------- ADMIN ---------- */
+  function startAdmin() {
+    $('login').hidden = true; $('app').hidden = false; $('side').hidden = false; $('newBtn').hidden = false; $('shell').className = 'shell';
+    $('topName').textContent = 'ניהול לקוחות';
+    loadList(); renderMain(true);
+    clearInterval(S.poll); S.poll = setInterval(function () { if (d.hidden) return; loadList(); if (S.sel) loadClient(S.sel, false); }, 5000);
+  }
+  function loadList() { return api('list').then(function (j) { S.clients = j.clients || []; renderList(); }).catch(function (e) { if (e.status === 401) { toast('נא להתחבר מחדש'); $('logout').click(); } }); }
+  function loadClient(id, first) {
+    return api('get', { q: '&id=' + encodeURIComponent(id) }).then(function (j) {
+      var changed = first || JSON.stringify(j.client) !== JSON.stringify(S.client) || j.msgs.length !== S.msgs.length;
+      S.client = j.client; S.msgs = j.msgs; if (changed) renderMain(!!first);
+    }).catch(function () {});
+  }
+  function renderList() {
+    d.querySelectorAll('.tab').forEach(function (t) { t.setAttribute('aria-pressed', String(t.dataset.f === S.filter)); t.textContent = t.textContent.replace(/ \(\d+\)$/, '') + ' (' + S.clients.filter(function (c) { return t.dataset.f === 'all' || c.status === t.dataset.f; }).length + ')'; });
+    var q = S.q.toLowerCase();
+    var list = S.clients.filter(function (c) { return (S.filter === 'all' || c.status === S.filter) && (!q || (c.bizName + ' ' + c.name + ' ' + c.email + ' ' + c.phone).toLowerCase().indexOf(q) > -1); })
+      .sort(function (a, b) { return (b.lastMsg || b.createdAt) - (a.lastMsg || a.createdAt); });
+    $('clist').innerHTML = list.length ? list.map(function (c) {
+      return '<button type="button" class="citem" data-id="' + esc(c.id) + '" aria-current="' + (S.sel === c.id) + '"><span class="row"><b>' + esc(c.bizName || c.name || 'ללא שם') + '</b>' + (c.unread ? '<span class="dot" aria-label="' + c.unread + ' הודעות חדשות">' + c.unread + '</span>' : '') + '</span>' +
+        '<span class="row"><small class="muted">' + esc(c.name || '') + '</small><span class="badge b-' + esc(c.status) + '">' + esc(CS[c.status] || c.status) + '</span></span></button>';
+    }).join('') : '<p class="muted">אין לקוחות בקטגוריה הזו.</p>';
+  }
+  d.addEventListener('click', function (e) {
+    var t = e.target.closest('.tab'); if (t) { S.filter = t.dataset.f; renderList(); return; }
+    var c = e.target.closest('.citem'); if (c) { S.sel = c.dataset.id; S.client = null; S.msgs = []; renderList(); loadClient(S.sel, true); return; }
+  });
+  $('search').addEventListener('input', function () { S.q = this.value; renderList(); });
+  $('newBtn').onclick = function () {
+    var biz = prompt('שם העסק של הלקוח החדש:'); if (!biz) return;
+    var name = prompt('שם איש הקשר:') || ''; var phone = prompt('טלפון (לא חובה):') || '';
+    api('new', { body: { bizName: biz, name: name, phone: phone } }).then(function (j) { S.sel = j.id; S.filter = 'approved'; loadList(); loadClient(j.id, true); toast('הלקוח נוצר'); }).catch(function (e) { toast(errText(e)); });
+  };
+
+  /* ---------- MAIN RENDER ---------- */
+  function renderMain(first) {
+    var m = $('main'), c = S.client, admin = S.mode === 'admin';
+    if (!c) { m.innerHTML = admin ? '<div class="card"><h2>בחרו לקוח מהרשימה</h2><p class="muted">לקוחות שמסיימים את השאלון באתר מופיעים כאן תחת "ממתינים". מאשרים — והצ׳אט נפתח להם.</p></div>' : ''; return; }
+    var keepDraft = $('txt') ? $('txt').value : '', keepFocus = d.activeElement && d.activeElement.id, msgsEl = $('msgs'), atBottom = !msgsEl || msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 80;
+    if (!admin && c.status === 'pending') {
+      m.innerHTML = '<div class="card pendingbox"><div class="big">WAIT</div><h1 style="margin:14px 0 6px">הבקשה שלכם התקבלה!</h1><p class="muted">אנחנו עוברים על הפרטים. ברגע שנאשר — הצ׳אט ייפתח כאן. אפשר לחזור לדף הזה בכל זמן עם אותו קישור.</p>' +
+        '<a class="btn" style="margin-top:18px" target="_blank" rel="noopener" href="https://wa.me/972585974771">יש שאלה? וואטסאפ</a></div>';
+      return;
+    }
+    var prog = c.progress || [], done = prog.filter(function (p) { return p.state === 'done'; }).length, pct = prog.length ? Math.round(done / prog.length * 100) : 0;
+    var pay = c.payment || { total: 0, paid: 0 }, rem = Math.max(0, (pay.total || 0) - (pay.paid || 0)), ppct = pay.total ? Math.min(100, Math.round(pay.paid / pay.total * 100)) : 0;
+    var link = c.code ? location.origin + '/portal.html?c=' + c.code : '';
+    var phone = String(c.phone || '').replace(/\D/g, ''); if (phone[0] === '0') phone = '972' + phone.slice(1);
+
+    var h = '';
+    if (admin) {
+      h += '<div class="card" style="margin-bottom:16px"><h2><span>' + esc(c.bizName || 'ללא שם') + ' <small class="muted" style="font-weight:400">· ' + esc(c.name || '') + (c.email ? ' · <span dir="ltr">' + esc(c.email) + '</span>' : '') + (c.phone ? ' · <span dir="ltr">' + esc(c.phone) + '</span>' : '') + '</small></span>' +
+        '<span class="badge b-' + esc(c.status) + '">' + esc(CS[c.status]) + '</span></h2>' +
+        '<div class="adm" style="margin-top:0;border:0;padding-top:0"><div class="r">' +
+        (c.status === 'pending' ? '<button class="btn" type="button" data-act="approve">✓ אישור צ׳אט והזמנה</button>' : '') +
+        '<label class="sr" for="stSel">סטטוס</label><select class="in" id="stSel" style="flex:0 1 180px">' + ['pending', 'approved', 'done', 'archived'].map(function (s) { return '<option value="' + s + '"' + (s === c.status ? ' selected' : '') + '>' + CS[s] + '</option>'; }).join('') + '</select></div>' +
+        (link ? '<div class="linkbox"><label class="sr" for="lnk">קישור ללקוח</label><input class="in" id="lnk" readonly value="' + esc(link) + '"><button class="btn ghost sm" type="button" data-act="copy">העתקה</button>' +
+          (phone ? '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://wa.me/' + esc(phone) + '?text=' + encodeURIComponent('היי! זה הקישור לאזור הלקוח שלך ב-TAZMIN, שם נדבר ותראה את ההתקדמות: ' + link) + '">שליחה בוואטסאפ</a>' : '') + '</div>' : '') +
+        (c.summary ? '<details><summary style="cursor:pointer">תשובות השאלון</summary><pre style="white-space:pre-wrap;font:inherit;margin:8px 0 0" class="muted">' + esc(c.summary) + '</pre></details>' : '') + '</div></div>';
+    }
+    h += '<div class="grid"><div class="stack">';
+    // site preview
+    h += '<section class="card" aria-labelledby="hSite"><h2 id="hSite"><span>האתר שלכם</span>' + (c.siteUrl ? '<a class="btn ghost sm" href="' + esc(c.siteUrl) + '" target="_blank" rel="noopener">פתיחה בחלון חדש ↗</a>' : '') + '</h2>' +
+      '<div class="frame">' + (c.siteUrl ? '<iframe src="' + esc(c.siteUrl) + '" title="תצוגה של האתר" loading="lazy" referrerpolicy="no-referrer"></iframe>' : '<div class="empty">האתר יופיע כאן ברגע שיהיה מוכן לצפייה.</div>') + '</div>' +
+      (c.siteUrl ? '<p class="muted" style="font-size:.8rem;margin:6px 0 0">לא רואים? יש אתרים שחוסמים תצוגה בתוך מסגרת — פתחו בחלון חדש.</p>' : '') +
+      (admin ? '<div class="adm"><label for="siteIn">קישור לאתר של הלקוח</label><div class="r"><input class="in" id="siteIn" dir="ltr" placeholder="https://" value="' + esc(c.siteUrl || '') + '"><button class="btn sm" type="button" data-act="site" style="flex:0 0 auto">שמירה</button></div></div>' : '') + '</section>';
+    // progress
+    h += '<section class="card" aria-labelledby="hProg"><h2 id="hProg"><span>מה עשינו עד עכשיו</span><span class="muted" style="font-weight:400">' + done + ' מתוך ' + prog.length + ' בוצעו</span></h2>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '" aria-label="התקדמות"><i style="width:' + pct + '%"></i></div>' +
+      '<ul class="plist">' + (prog.length ? prog.map(function (p) {
+        return '<li><div class="t">' + esc(p.title) + '<div class="cat">' + esc(p.cat || '') + (p.by === 'client' ? ' · בקשה של הלקוח' : '') + '</div></div>' +
+          (admin ? '<button type="button" class="state s-' + p.state + '" data-cycle="' + esc(p.id) + '" aria-label="מצב: ' + STATE[p.state] + '. לחצו לשינוי">' + STATE[p.state] + '</button><button type="button" class="icon" style="min-width:36px;min-height:36px" data-del="' + esc(p.id) + '" aria-label="מחיקה">×</button>'
+            : '<span class="state s-' + p.state + '">' + STATE[p.state] + '</span>') + '</li>';
+      }).join('') : '<li class="muted">עדיין אין משימות.</li>') + '</ul>' +
+      (admin ? '<div class="adm"><div class="r"><label class="sr" for="pNew">משימה חדשה</label><input class="in" id="pNew" placeholder="משימה חדשה (למשל: עיצוב דף הבית)"><select class="in" id="pCat" aria-label="קטגוריה" style="flex:0 1 150px">' + CATS.map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select><button class="btn sm" type="button" data-act="addp" style="flex:0 0 auto">הוספה</button></div></div>' : '') + '</section>';
+    // payment
+    h += '<section class="card" aria-labelledby="hPay"><h2 id="hPay"><span>תשלום</span><span class="badge ' + (pay.total && rem === 0 ? 'b-approved' : 'b-pending') + '">' + (pay.total ? (rem === 0 ? 'שולם במלואו' : 'נשאר לתשלום') : 'טרם נקבע מחיר') + '</span></h2>' +
+      '<div class="pay"><div><span class="muted">סה״כ</span><b>' + money(pay.total) + '</b></div><div><span class="muted">שולם</span><b>' + money(pay.paid) + '</b></div><div><span class="muted">נשאר</span><b>' + money(rem) + '</b></div></div>' +
+      '<div class="bar" style="margin-top:10px"><i style="width:' + ppct + '%;background:var(--ok)"></i></div>' + (pay.note ? '<p class="muted" style="margin:8px 0 0">' + esc(pay.note) + '</p>' : '') +
+      (admin ? '<div class="adm"><div class="r"><div><label for="payT">מחיר כולל (₪)</label><input class="in" id="payT" type="number" min="0" inputmode="decimal" value="' + esc(pay.total || 0) + '"></div><div><label for="payP">שולם (₪)</label><input class="in" id="payP" type="number" min="0" inputmode="decimal" value="' + esc(pay.paid || 0) + '"></div></div>' +
+        '<label for="payN">הערה ללקוח (אופן תשלום וכו׳)</label><input class="in" id="payN" value="' + esc(pay.note || '') + '"><button class="btn sm" type="button" data-act="pay">שמירת תשלום</button></div>' : '') + '</section>';
+    h += '</div>';
+    // chat
+    h += '<section class="card chat" aria-labelledby="hChat"><h2 id="hChat"><span>צ׳אט</span><button class="btn ghost sm" type="button" data-act="reqToggle">+ בקשת שינוי</button></h2>' +
+      '<div class="msgs" id="msgs" aria-live="polite" tabindex="0" aria-label="הודעות">' + (S.msgs.length ? S.msgs.map(renderMsg).join('') : '<p class="muted" style="text-align:center;margin:auto">' + (admin ? 'עוד אין הודעות. תכתבו ללקוח!' : 'היי! כאן מדברים איתנו, שולחים קבצים וקישורים ומבקשים שינויים.') + '</p>') + '</div>' +
+      '<div class="compose"><div class="reqbox" id="reqbox"><b style="color:var(--warn)">בקשת שינוי</b><div class="r" style="display:flex;gap:8px"><label class="sr" for="reqCat">במה?</label><select class="in" id="reqCat">' + CATS.map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select></div>' +
+      '<p class="muted" style="margin:0;font-size:.85rem">כתבו מה לשנות בתיבה למטה ושלחו — הבקשה תתווסף לרשימת המשימות.</p></div>' +
+      '<div class="chips" id="chips"></div>' +
+      '<div class="r"><button type="button" class="icon" data-act="link" aria-label="צירוף קישור">🔗</button><label class="icon" style="display:grid;place-items:center" aria-label="צירוף קובץ"><span aria-hidden="true">📎</span><input type="file" id="fileIn" class="sr"></label>' +
+      '<label class="sr" for="txt">הודעה</label><textarea class="in" id="txt" rows="1" placeholder="כתבו הודעה…"></textarea><button class="btn" type="button" data-act="send" id="sendBtn">שליחה</button></div></div></section>';
+    h += '</div>';
+    m.innerHTML = h;
+    $('txt').value = keepDraft; renderChips();
+    if (S.reqOpen) $('reqbox').classList.add('open');
+    if (keepFocus && $(keepFocus)) $(keepFocus).focus();
+    var ms = $('msgs'); if (first || atBottom) ms.scrollTop = ms.scrollHeight;
+    $('txt').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+    $('fileIn').addEventListener('change', function () { var f = this.files && this.files[0]; this.value = ''; if (!f) return; if (f.size > 600 * 1024) { toast('הקובץ גדול מדי (עד 600KB). שלחו קישור לגוגל דרייב במקום.'); return; }
+      var rd = new FileReader(); rd.onload = function () { S.att.file = { name: f.name, type: f.type || 'application/octet-stream', data: String(rd.result).split(',')[1] }; renderChips(); }; rd.readAsDataURL(f); });
+    var sel = $('stSel'); if (sel) sel.onchange = function () { update({ status: sel.value }); };
+  }
+  function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" dir="ltr">$1</a>').replace(/\n/g, '<br>'); }
+  function renderMsg(x) {
+    var mine = (S.mode === 'admin') === (x.from === 'admin');
+    var who = x.from === 'admin' ? 'TAZMIN' : (S.client && (S.client.name || 'לקוח'));
+    return '<div class="m' + (mine ? ' me' : '') + (x.kind === 'request' ? ' req' : '') + '">' + (x.kind === 'request' ? '<span class="tagr">✎ בקשת שינוי · ' + esc(x.cat || '') + '</span><br>' : '') +
+      (x.text ? linkify(x.text) : '') + (x.links || []).map(function (u) { return '<br>🔗 <a href="' + esc(u) + '" target="_blank" rel="noopener noreferrer" dir="ltr">' + esc(u) + '</a>'; }).join('') +
+      (x.file ? '<button type="button" class="fbtn" data-file="' + esc(x.file.id) + '">📎 ' + esc(x.file.name) + ' <span class="muted">(' + Math.round(x.file.size / 1024) + 'KB) — לחצו לפתיחה</span></button>' : '') +
+      '<small>' + esc(who) + ' · ' + fmtT(x.t) + '</small></div>';
+  }
+  function renderChips() {
+    var c = $('chips'); if (!c) return;
+    c.innerHTML = S.att.links.map(function (u, i) { return '<span class="chip" dir="ltr">🔗 ' + esc(u.slice(0, 40)) + '<button type="button" data-rml="' + i + '" aria-label="הסרת קישור">×</button></span>'; }).join('') +
+      (S.att.file ? '<span class="chip">📎 ' + esc(S.att.file.name) + '<button type="button" data-rmf="1" aria-label="הסרת קובץ">×</button></span>' : '');
+  }
+  function send() {
+    var t = $('txt').value.trim(), req = $('reqbox').classList.contains('open');
+    if (!t && !S.att.links.length && !S.att.file) { $('txt').focus(); return; }
+    if (req && !t) { toast('כתבו מה לשנות'); return; }
+    var body = { text: t, links: S.att.links, file: S.att.file, kind: req ? 'request' : 'msg', cat: req ? $('reqCat').value : undefined };
+    var btn = $('sendBtn'); btn.disabled = true;
+    var p = S.mode === 'admin' ? api('msg', { body: Object.assign({ id: S.client.id }, body) }) : api('me', { body: body });
+    p.then(function () { $('txt').value = ''; S.att = { links: [], file: null }; S.reqOpen = false; if (S.mode === 'admin') loadClient(S.client.id, false).then(scrollDown); else pollClient(); setTimeout(scrollDown, 400); })
+      .catch(function (e) { toast(errText(e)); }).then(function () { var b = $('sendBtn'); if (b) b.disabled = false; });
+  }
+  function scrollDown() { var ms = $('msgs'); if (ms) ms.scrollTop = ms.scrollHeight; }
+  function update(patch) {
+    return api('update', { body: { id: S.client.id, patch: patch } }).then(function (j) { S.client = j.client; renderMain(false); loadList(); toast('נשמר'); }).catch(function (e) { toast(errText(e)); });
+  }
+  $('main').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act],[data-cycle],[data-del],[data-rml],[data-rmf],[data-file]'); if (!b) return;
+    var a = b.dataset.act, c = S.client;
+    if (a === 'send') send();
+    else if (a === 'reqToggle') { S.reqOpen = !$('reqbox').classList.contains('open'); $('reqbox').classList.toggle('open', S.reqOpen); $('txt').focus(); }
+    else if (a === 'link') { var u = prompt('הדביקו קישור (https://...)'); if (u) { u = u.trim(); if (!/^https?:\/\//i.test(u)) u = 'https://' + u; S.att.links.push(u); renderChips(); } }
+    else if (b.dataset.rml !== undefined) { S.att.links.splice(+b.dataset.rml, 1); renderChips(); }
+    else if (b.dataset.rmf) { S.att.file = null; renderChips(); }
+    else if (b.dataset.file) openFile(b.dataset.file, b);
+    else if (a === 'approve') update({ status: 'approved' }).then(function () { S.filter = 'approved'; renderList(); });
+    else if (a === 'copy') { var l = $('lnk'); l.select(); (navigator.clipboard ? navigator.clipboard.writeText(l.value) : Promise.reject()).then(function () { toast('הקישור הועתק'); }, function () { try { d.execCommand('copy'); toast('הקישור הועתק'); } catch (er) {} }); }
+    else if (a === 'site') { var v = $('siteIn').value.trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v; update({ siteUrl: v }); }
+    else if (a === 'pay') update({ payment: { total: $('payT').value, paid: $('payP').value, note: $('payN').value } });
+    else if (a === 'addp') { var tt = $('pNew').value.trim(); if (!tt) { $('pNew').focus(); return; } update({ progress: (c.progress || []).concat([{ id: '', title: tt, cat: $('pCat').value, state: 'requested', by: 'admin', t: Date.now() }]) }); }
+    else if (b.dataset.cycle) { var nx = { requested: 'doing', doing: 'done', done: 'requested' }; update({ progress: (c.progress || []).map(function (p) { return p.id === b.dataset.cycle ? Object.assign({}, p, { state: nx[p.state] }) : p; }) }); }
+    else if (b.dataset.del) { if (confirm('למחוק את המשימה?')) update({ progress: (c.progress || []).filter(function (p) { return p.id !== b.dataset.del; }) }); }
+  });
+  function openFile(id, btn) {
+    btn.disabled = true;
+    api('file', { q: '&id=' + encodeURIComponent(id) }).then(function (f) {
+      var bin = atob(f.data), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([arr], { type: f.type }));
+      if (/^image\//.test(f.type) && f.type !== 'image/svg+xml') { var im = d.createElement('img'); im.src = url; im.alt = f.name; btn.replaceWith(im); }
+      else { var a = d.createElement('a'); a.href = url; a.download = f.name; a.textContent = '⬇ הורדת ' + f.name; a.className = 'fbtn'; btn.replaceWith(a); a.click(); }
+    }).catch(function (e) { btn.disabled = false; toast(errText(e)); });
+  }
+
+  /* ---------- BOOT ---------- */
+  var qc = new URLSearchParams(location.search).get('c');
+  var saved = st('tzp_code'), adm = null; try { adm = JSON.parse(st('tzp_admin', undefined, true) || 'null'); } catch (e) {}
+  if (qc) { $('codeIn').value = qc.toUpperCase(); enterClient(qc.trim().toUpperCase(), $('codeErr')); }
+  else if (adm) { S.mode = 'admin'; S.admin = adm; api('login').then(startAdmin).catch(function () { st('tzp_admin', null, true); S.mode = null; showLogin(true); }); }
+  else if (saved) enterClient(saved, $('codeErr'));
+  else showLogin(new URLSearchParams(location.search).has('admin'));
+})();
+</script>
+</body>
+</html>

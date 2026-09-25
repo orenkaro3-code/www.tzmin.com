@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
+h1,h2,.lead,.eyebrow{text-shadow:0 2px 24px rgba(0,0,0,.85),0 0 3px rgba(0,0,0,.6)}
 :root{
   color-scheme:dark;
   --bg:#07060a; --ink:#f4efe8; --muted:#bcb4ab; --a:#e8b04b; --a-ink:#0a0806; --line:rgba(244,239,232,.16);
@@ -771,6 +772,7 @@ html.still *,html.still *::before,html.still *::after{animation:none!important;t
       (ok ? 'נעבור על התשובות ונחזור אליכם עם תוכנית לעסק.' : 'התשובות נשמרו במכשיר הזה. כדי לוודא שקיבלנו — שלחו לנו הודעה בוואטסאפ.') +
       '</p><a class="btn" target="_blank" rel="noopener" href="https://wa.me/' + WA + '?text=' + encodeURIComponent(summaryText()) + '">שליחת סיכום בוואטסאפ</a></div>';
     $('qNext').textContent = 'סגירה'; $('qNext').onclick = function () { $('qNext').onclick = null; closeOv('qOv'); };
+    try { fetch('/api/portal?a=create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: me && me.name, email: me && me.email, phone: form.phone, bizName: form.bizName, services: form.services || [], summary: summaryText() }) }).then(function (r) { return r.json(); }).then(function (j) { if (!j || !j.code) return; var u = location.origin + '/portal.html?c=' + j.code; ls('tz_portal', u); var box = d.createElement('div'); box.className = 'note'; box.style.marginTop = '22px'; box.innerHTML = '<b>נפתח לכם אזור לקוח אישי עם צ׳אט!</b><br>שמרו את הקישור (הקוד שלכם: <b dir="ltr">' + j.code + '</b>):<br><a href="' + u + '" dir="ltr" style="word-break:break-all">' + u + '</a><br><a class="btn" href="' + u + '">כניסה לאזור הלקוח ←</a>'; var cb = $('qBody').querySelector('.center-box'); if (cb) cb.appendChild(box); }).catch(function () {}); } catch (e) {}
     $('qTitle').focus();
   }
   function startQ() {

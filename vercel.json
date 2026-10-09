@@ -1,1 +1,1 @@
-{"framework": null, "buildCommand": "", "installCommand": "", "outputDirectory": "."}
+{"framework": null, "buildCommand": "", "installCommand": "", "outputDirectory": ".", "functions": {"api/insights.js": {"maxDuration": 60}}}

@@ -151,7 +151,7 @@ button.state{cursor:pointer}
   <header class="top">
     <div class="who"><span class="brand">TAZMIN</span><b id="topName"></b></div>
     <div style="display:flex;gap:8px">
-      <button class="btn ghost sm" type="button" id="newBtn" hidden>+ לקוח חדש</button>
+      <button class="btn ghost sm" type="button" id="newBtn" hidden>+ אזור לקוח חדש</button>
       <button class="btn ghost sm" type="button" id="logout">יציאה</button>
     </div>
   </header>
@@ -170,6 +170,7 @@ button.state{cursor:pointer}
   </div>
 </div>
 
+<script src="/plugin-insights.js" defer></script>
 <script>
 (function () {
   'use strict';
@@ -191,7 +192,7 @@ button.state{cursor:pointer}
     var h = { 'Content-Type': 'application/json' };
     if (S.mode === 'client') h['x-code'] = S.code;
     if (S.mode === 'admin' && S.admin) { h['x-admin-email'] = S.admin.email; h['x-admin-pass'] = S.admin.pass; }
-    return fetch('/api/portal?a=' + a + (opts.q || ''), { method: opts.body ? 'POST' : 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store' })
+    return fetch(opts.path ? opts.path + (opts.q || '') : '/api/portal?a=' + a + (opts.q || ''), { method: opts.body ? 'POST' : 'GET', headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined, cache: 'no-store' })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.error || 'error'); e.status = r.status; throw e; } return j; }); });
   }
   function errText(e) {
@@ -259,8 +260,11 @@ button.state{cursor:pointer}
   $('search').addEventListener('input', function () { S.q = this.value; renderList(); });
   $('newBtn').onclick = function () {
     var biz = prompt('שם העסק של הלקוח החדש:'); if (!biz) return;
-    var name = prompt('שם איש הקשר:') || ''; var phone = prompt('טלפון (לא חובה):') || '';
-    api('new', { body: { bizName: biz, name: name, phone: phone } }).then(function (j) { S.sel = j.id; S.filter = 'approved'; loadList(); loadClient(j.id, true); toast('הלקוח נוצר'); }).catch(function (e) { toast(errText(e)); });
+    var name = prompt('שם איש הקשר:') || ''; var phone = prompt('טלפון (לא חובה):') || ''; var ig = (prompt('אינסטגרם של העסק (לא חובה, @username):') || '').trim();
+    var plug = (window.TZ_PLUGINS || []).filter(function (p) { return p.setInstagram; })[0];
+    api('new', { body: { bizName: biz, name: name, phone: phone } }).then(function (j) {
+      return (ig && plug ? plug.setInstagram(j.id, ig, T).catch(function () { toast('האינסטגרם לא נשמר — אפשר להוסיף בפלאגין'); }) : Promise.resolve()).then(function () { return j; });
+    }).then(function (j) { S.sel = j.id; S.filter = 'approved'; loadList(); loadClient(j.id, true); toast('אזור הלקוח נוצר — הקישור לצ׳אט מוכן לשליחה'); }).catch(function (e) { toast(errText(e)); });
   };
 
   /* ---------- MAIN RENDER ---------- */
@@ -288,6 +292,7 @@ button.state{cursor:pointer}
         (link ? '<div class="linkbox"><label class="sr" for="lnk">קישור ללקוח</label><input class="in" id="lnk" readonly value="' + esc(link) + '"><button class="btn ghost sm" type="button" data-act="copy">העתקה</button>' +
           (phone ? '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://wa.me/' + esc(phone) + '?text=' + encodeURIComponent('היי! זה הקישור לאזור הלקוח שלך ב-TAZMIN, שם נדבר ותראה את ההתקדמות: ' + link) + '">שליחה בוואטסאפ</a>' : '') + '</div>' : '') +
         (c.summary ? '<details><summary style="cursor:pointer">תשובות השאלון</summary><pre style="white-space:pre-wrap;font:inherit;margin:8px 0 0" class="muted">' + esc(c.summary) + '</pre></details>' : '') + '</div></div>';
+      h += '<div id="tzPlugins"></div>';
     }
     h += '<div class="grid"><div class="stack">';
     // site preview
@@ -321,6 +326,7 @@ button.state{cursor:pointer}
       '<label class="sr" for="txt">הודעה</label><textarea class="in" id="txt" rows="1" placeholder="כתבו הודעה…"></textarea><button class="btn" type="button" data-act="send" id="sendBtn">שליחה</button></div></div></section>';
     h += '</div>';
     m.innerHTML = h;
+    if (admin) runPlugins(c);
     $('txt').value = keepDraft; renderChips();
     if (S.reqOpen) $('reqbox').classList.add('open');
     if (keepFocus && $(keepFocus)) $(keepFocus).focus();
@@ -330,6 +336,13 @@ button.state{cursor:pointer}
       var rd = new FileReader(); rd.onload = function () { S.att.file = { name: f.name, type: f.type || 'application/octet-stream', data: String(rd.result).split(',')[1] }; renderChips(); }; rd.readAsDataURL(f); });
     var sel = $('stSel'); if (sel) sel.onchange = function () { update({ status: sel.value }); };
   }
+  /* ---------- PLUGINS (admin only) ---------- */
+  var T = { api: api, esc: esc, toast: toast, state: function () { return S; } };
+  function runPlugins(c) {
+    var slot = $('tzPlugins'); if (!slot) return;
+    (window.TZ_PLUGINS || []).forEach(function (p) { var el = d.createElement('div'); slot.appendChild(el); try { p.render(el, c, T); } catch (e) { console.error('plugin', p.name, e); } });
+  }
+  window.addEventListener('load', function () { if (S.mode === 'admin' && S.client && $('tzPlugins') && !$('tzPlugins').children.length) runPlugins(S.client); }); // plugin script may load after the first render
   function linkify(t) { return esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" dir="ltr">$1</a>').replace(/\n/g, '<br>'); }
   function renderMsg(x) {
     var mine = (S.mode === 'admin') === (x.from === 'admin');

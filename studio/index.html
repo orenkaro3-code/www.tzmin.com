@@ -57,7 +57,10 @@
   <div class="glass card glow narrow">
     <div class="orb sm" aria-hidden="true"><span></span></div>
     <h1>מחברים את Claude</h1>
-    <p class="lead">כל משתמש מחבר מפתח משלו. המפתח נשמר <b>רק במכשיר שלך</b> ונשלח ישירות ל-Anthropic — לא לשרת שלנו.</p>
+    <button class="btn primary big" type="button" id="webMode" style="width:100%">✦ עבודה עם חשבון Claude שלי</button>
+    <p class="muted" style="margin:0;font-size:.85rem">בלי מפתח ובלי תשלום נוסף — הסטודיו מכין את ההוראה ופותח אותה ב-claude.ai, ואת התשובה מדביקים בחזרה לתצוגה חיה.</p>
+    <div class="or"><span>או בנייה חיה בתוך הסטודיו</span></div>
+    <p class="lead" style="font-size:.9rem">מפתח API — נשמר <b>רק במכשיר שלך</b> ונשלח ישירות ל-Anthropic.</p>
     <form id="keyForm" class="form" novalidate>
       <label for="keyIn">Claude API key</label>
       <input class="in mono" id="keyIn" type="password" dir="ltr" autocomplete="off" placeholder="sk-ant-...">
@@ -68,7 +71,7 @@
         <option value="claude-haiku-5-5">Claude Haiku 5.5 — הכי זול ומהיר</option>
       </select>
       <p class="err" id="keyErr" role="alert"></p>
-      <button class="btn primary big" type="submit" id="keyBtn">חיבור ובדיקה</button>
+      <button class="btn big" type="submit" id="keyBtn">חיבור ובדיקה</button>
       <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">איפה משיגים מפתח? ← console.anthropic.com</a>
     </form>
   </div>

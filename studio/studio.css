@@ -202,3 +202,6 @@ dialog.sheet::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6p
 .toast.show{opacity:1;translate:-50% 0}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+.m.note{background:rgba(255,255,255,.04);border-style:dashed}
+.notebtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}

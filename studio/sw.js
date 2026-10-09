@@ -1,6 +1,6 @@
 // TAZMIN Studio service worker: makes the app installable and opens instantly.
 // App shell is cached; API calls (Claude, GitHub) always go to the network.
-const V = 'studio-v1';
+const V = 'studio-v2';
 const SHELL = ['/studio/', '/studio/studio.css', '/studio/studio.js', '/studio/manifest.webmanifest', '/studio/icon-192.png', '/studio/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

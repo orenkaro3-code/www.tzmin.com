@@ -21,7 +21,7 @@ function safeEq(a, b) { const x = Buffer.from(String(a || '')), y = Buffer.from(
 function isAdmin(req) {
   const pw = process.env.ADMIN_PASSWORD;
   if (!pw) return false;
-  return String(req.headers['x-admin-email'] || '').trim().toLowerCase() === ADMIN_EMAIL && safeEq(req.headers['x-admin-pass'], pw);
+  return String(req.headers['x-admin-email'] || '').trim().toLowerCase() === ADMIN_EMAIL && safeEq(String(req.headers['x-admin-pass'] || '').trim(), String(pw).trim());
 }
 const err = (m, s) => Object.assign(new Error(m), { status: s || 400 });
 async function getClient(id) { return J(await r('GET', 'client:' + id)); }

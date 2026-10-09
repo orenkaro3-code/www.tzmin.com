@@ -19,7 +19,7 @@ function safeEq(a, b) { const x = Buffer.from(String(a || '')), y = Buffer.from(
 function isAdmin(req) {
   const pw = process.env.ADMIN_PASSWORD;
   if (!pw) return false;
-  return String(req.headers['x-admin-email'] || '').trim().toLowerCase() === ADMIN_EMAIL && safeEq(req.headers['x-admin-pass'], pw);
+  return String(req.headers['x-admin-email'] || '').trim().toLowerCase() === ADMIN_EMAIL && safeEq(String(req.headers['x-admin-pass'] || '').trim(), String(pw).trim());
 }
 async function getClient(id) { return J(await r('GET', 'client:' + id)); }
 async function saveClient(c) { await r('SET', 'client:' + c.id, JSON.stringify(c)); }

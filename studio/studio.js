@@ -31,7 +31,7 @@
 
   var S = {
     user: LS.get('user', null), key: LS.get('key', ''), model: LS.get('model', 'claude-sonnet-5-5'), mcp: LS.get('mcp', []),
-    web: LS.get('web', false), projects: LS.get('projects', []), cur: null, pickCat: null, busy: false, ctrl: null, view: 'preview', file: null, src: 'mine', installEvt: null
+    dev: LS.get('dev', '') || (function () { var x = (crypto.randomUUID ? crypto.randomUUID() : uid() + uid()).replace(/-/g, ''); LS.set('dev', x); return x; })(), left: null, projects: LS.get('projects', []), cur: null, pickCat: null, busy: false, ctrl: null, view: 'preview', file: null, src: 'mine', installEvt: null
   };
   function saveProjects() { S.projects = S.projects.slice(0, 30); LS.set('projects', S.projects); }
   function P() { return S.cur; }
@@ -43,7 +43,6 @@
   function next() {
     if (!isInstalled() && !LS.get('skipInstall', false)) return show('scInstall');
     if (!S.user) return show('scLogin');
-    if (!S.key && !S.web) { $('modelIn').value = S.model; return show('scKey'); }
     renderHome(); show('scHome');
   }
 
@@ -95,16 +94,19 @@
     if (!/^sk-ant-/.test(k)) { $('keyErr').textContent = 'מפתח של Claude מתחיל ב-sk-ant-'; return; }
     $('keyBtn').disabled = true; $('keyBtn').textContent = 'בודק…'; $('keyErr').textContent = '';
     claude({ key: k, model: m, max_tokens: 8, messages: [{ role: 'user', content: 'hi' }] }).then(function () {
-      S.key = k; S.model = m; S.web = false; LS.set('key', k); LS.set('model', m); LS.set('web', false); $('keyIn').value = ''; toast('Claude מחובר ✓'); next();
+      S.key = k; S.model = m; LS.set('key', k); LS.set('model', m); $('keyIn').value = ''; toast('Claude מחובר ✓'); next();
     }).catch(function (er) { $('keyErr').textContent = apiErr(er); }).then(function () { $('keyBtn').disabled = false; $('keyBtn').textContent = 'חיבור ובדיקה'; });
   });
-  $('webMode').onclick = function () { S.web = true; S.key = ''; LS.set('web', true); LS.set('key', null); toast('עובדים עם חשבון Claude שלך ✓'); next(); };
+  $('keySkip').onclick = function () { $('keyIn').value = ''; renderHome(); show('scHome'); };
   function apiErr(er) {
     var s = er && er.status, m = (er && er.message) || '';
     if (s === 401) return 'המפתח לא תקין.';
     if (s === 403) return 'למפתח אין הרשאה למודל הזה.';
     if (s === 404) return 'המודל לא נמצא — בחרו מודל אחר בהגדרות.';
-    if (s === 429) return 'יותר מדי בקשות או שנגמר הקרדיט. נסו שוב עוד רגע.';
+    if (s === 429 && m === 'quota') return 'נגמרה המכסה היומית שלך בסטודיו 🙏 היא מתחדשת מחר. רוצים להמשיך עכשיו? אפשר להוסיף מפתח Claude משלכם בהגדרות ⚙︎.';
+    if (s === 429 && m === 'global_quota') return 'הסטודיו הגיע למכסה היומית של כולם. נסו שוב מחר, או הוסיפו מפתח משלכם בהגדרות ⚙︎.';
+    if (m === 'studio_not_configured') return 'הסטודיו עוד לא מחובר ל-Claude בשרת (חסר ANTHROPIC_API_KEY).';
+    if (s === 429) return 'יותר מדי בקשות. נסו שוב עוד רגע.';
     if (s === 529 || s === 503) return 'Claude עמוס כרגע, נסו שוב עוד רגע.';
     if (/credit|billing/i.test(m)) return 'נגמר הקרדיט בחשבון ה-API.';
     if (!s) return 'אין חיבור לאינטרנט או ש-Anthropic לא זמינה.';
@@ -123,9 +125,17 @@
     }
     if (tools.length) body.tools = tools;
     if (o.onText) body.stream = true;
-    var h = { 'x-api-key': o.key || S.key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' };
-    if (mcp.length) h['anthropic-beta'] = 'mcp-client-2025-11-20';
-    return fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: h, body: JSON.stringify(body), signal: o.signal }).then(function (r) {
+    var own = o.key || S.key, url, h;
+    if (own) { // user's own key: straight to Anthropic, no limits
+      url = 'https://api.anthropic.com/v1/messages';
+      h = { 'x-api-key': own, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' };
+      if (mcp.length) h['anthropic-beta'] = 'mcp-client-2025-11-20';
+    } else { // studio's key via our server, with a daily allowance
+      url = '/api/studio-claude'; h = { 'content-type': 'application/json', 'x-studio-device': S.dev };
+      if (body.model === 'claude-opus-5-5') body.model = 'claude-sonnet-5-5';
+    }
+    return fetch(url, { method: 'POST', headers: h, body: JSON.stringify(body), signal: o.signal }).then(function (r) {
+      var left = r.headers.get('x-studio-left'); if (left != null) { S.left = +left; renderLeft(); }
       if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { var e = new Error((j.error && j.error.message) || ('HTTP ' + r.status)); e.status = r.status; throw e; });
       if (!o.onText) return r.json();
       return readStream(r, o);
@@ -170,18 +180,21 @@
   function textOf(j) { return (j.content || []).filter(function (b) { return b.type === 'text'; }).map(function (b) { return b.text; }).join(''); }
   function jsonFrom(t) { var m = String(t).match(/```(?:json)?\s*([\s\S]*?)```/); var s = m ? m[1] : t; var a = s.indexOf('{') > -1 && (s.indexOf('[') === -1 || s.indexOf('{') < s.indexOf('[')) ? s.slice(s.indexOf('{'), s.lastIndexOf('}') + 1) : s.slice(s.indexOf('['), s.lastIndexOf(']') + 1); try { return JSON.parse(a); } catch (e) { return null; } }
   function helper(o) { // cheap helper call, falls back to the main model
-    if (!S.key) return Promise.reject(Object.assign(new Error('no_key'), { status: 0, noKey: true }));
     o.model = HELPER_MODEL;
     return claude(o).catch(function (e) { if (e.status === 404 || e.status === 403) { o.model = S.model; return claude(o); } throw e; });
   }
 
+  function renderLeft() {
+    var t = S.key ? '' : S.left == null ? '' : S.left > 0 ? 'נשארו ' + S.left + ' הודעות היום' : 'המכסה היומית נגמרה';
+    d.querySelectorAll('.leftchip').forEach(function (el) { el.textContent = t; el.hidden = !t; });
+  }
   /* ================= HOME ================= */
   function renderUser() {
     var u = S.user || {};
     $('whoBox').innerHTML = (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : '') + '<span>' + esc(u.name || '') + (u.ghLogin ? ' · <span dir="ltr">@' + esc(u.ghLogin) + '</span>' : '') + '</span>';
   }
   function renderHome() {
-    renderUser();
+    renderUser(); renderLeft();
     var hr = new Date().getHours();
     $('greet').textContent = (hr < 12 ? 'בוקר טוב' : hr < 18 ? 'צהריים טובים' : 'ערב טוב') + (S.user && S.user.name ? ', ' + S.user.name : '') + '. מה בונים?';
     $('cats').innerHTML = CATS.map(function (c) { return '<button type="button" class="cat" role="radio" aria-checked="' + (S.pickCat === c.id) + '" data-cat="' + c.id + '"><span class="e" aria-hidden="true">' + c.e + '</span><b>' + esc(c.t) + '</b><small>' + esc(c.d) + '</small></button>'; }).join('');
@@ -223,7 +236,7 @@
     S.cur = p; S.file = null; S.view = Object.keys(p.files).length ? 'preview' : 'preview';
     var k = cat(p.cat);
     $('pTitle').textContent = p.title; $('pCat').textContent = k.e + ' ' + k.t;
-    $('mcpBadge').textContent = !S.key ? '· דרך החשבון שלך' : S.mcp.filter(function (x) { return x.on !== false; }).length ? '· MCP ' + S.mcp.filter(function (x) { return x.on !== false; }).length : '';
+    $('mcpBadge').textContent = S.mcp.filter(function (x) { return x.on !== false; }).length ? '· MCP ' + S.mcp.filter(function (x) { return x.on !== false; }).length : '';
     show('scWork'); setPane('chat');
     renderMsgs(); renderTools(); renderFiles(); renderPreview(); renderSkills();
     if (fresh) { startSkillSearch(); send(p.idea, null, true); }
@@ -321,7 +334,6 @@
   }
 
   function send(text, opts, first) {
-    if (!S.key) return webSend(text, opts, first);
     var p = P(); if (!p || S.busy) return;
     opts = opts || {};
     var k = cat(p.cat);
@@ -456,16 +468,13 @@
     if (k.mode === 'video') h = '<label class="btn ghost sm">🎞️ העלאת סרטון<input type="file" accept="video/*" class="sr" id="vidIn"></label>';
     if (k.mode === 'files') h = '<button class="btn ghost sm" type="button" id="pickDir">📁 בחירת תיקייה לסידור</button>' + (S.dir ? '<span class="chip">📁 ' + esc(S.dir.name) + '</span>' : '');
     if (k.mode === 'research') h = '<span class="chip">🔎 חיפוש ברשת פעיל</span>';
-    if (!S.key) h += '<button class="btn ghost sm" type="button" id="pasteBtn">📋 הדבקת תשובה מ-Claude</button>';
     $('catTools').innerHTML = h;
-    if ($('pasteBtn')) $('pasteBtn').onclick = pasteReply;
     if ($('vidIn')) $('vidIn').addEventListener('change', onVideo);
     if ($('pickDir')) $('pickDir').onclick = pickDir;
   }
   function onVideo() {
     var f = this.files && this.files[0]; this.value = ''; if (!f) return;
     if (S.busy) { toast('חכו ש-Claude יסיים'); return; }
-    if (!S.key) { send('אני מעלה לך עכשיו בשיחה הזו את הסרטון "' + f.name + '". תנתח אותו ותבנה תוכנית עריכה וכתוביות לפי ההוראות.', { show: '🎞️ ' + f.name }); toast('ב-Claude: גררו את הסרטון לשיחה'); return; }
     toast('מחלץ פריימים מהסרטון…');
     var v = d.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = URL.createObjectURL(f); v.playsInline = true;
     v.addEventListener('loadedmetadata', function () {
@@ -571,7 +580,6 @@
   function startSkillSearch() {
     var p = P(); p.found = { mine: null, github: null, tiktok: null, instagram: null }; renderSkills();
     var k = cat(p.cat);
-    if (!S.key) { var en0 = /[a-z]{3}/i.test(p.idea) ? p.idea.replace(/[^\w\s-]/g, ' ').split(/\s+/).filter(function (w) { return /^[a-z][\w-]{2,}$/i.test(w); }).slice(0, 3).join(' ') + ' ' + k.en.split(' ')[0] : k.en; p.kw = en0; searchMine(p, en0); searchGithub(p, en0); socialLinks(p, 'tiktok'); socialLinks(p, 'instagram'); return; }
     var kw = helper({ max_tokens: 200, messages: [{ role: 'user', content: 'Idea (may be Hebrew): "' + p.idea + '". Category: ' + k.en + '.\nReturn ONLY JSON: {"en":"2-4 short English search keywords for GitHub"}' }] })
       .then(function (j) { var o = jsonFrom(textOf(j)); return (o && o.en) || k.en; }).catch(function () { return k.en; });
     kw.then(function (en) {
@@ -649,6 +657,8 @@
   }
   $('sres').addEventListener('click', function (e) {
     if (e.target.closest('#reSearch')) { startSkillSearch(); return; }
+    var lk = e.target.closest('.sk .top a');
+    if (lk) { var L = P().found[S.src], hit = (Array.isArray(L) ? L : []).filter(function (x) { return x.url === lk.getAttribute('href'); })[0]; if (hit) { e.preventDefault(); openViewer(hit); } return; }
     var a = e.target.closest('[data-addmcp]'); if (a) { openSettings(); $('mcpName').value = a.dataset.addmcp.split('/').pop().replace(/[^a-z0-9_-]/gi, '').slice(0, 30); $('mcpUrl').focus(); toast('הדביקו את כתובת השרת (https) מה-README של הריפו'); return; }
     var b = e.target.closest('[data-use]'); if (!b) return;
     var p = P(), id = b.dataset.use, list = p.found[S.src], it = (Array.isArray(list) ? list : []).filter(function (x) { return x.id === id; })[0];
@@ -659,60 +669,41 @@
     b.disabled = true; b.textContent = '…';
     loadSkillText(it).then(function (t) { p.skills = (p.skills || []).concat([{ id: it.id, name: it.name, url: it.url, kind: it.kind, text: t }]); saveProjects(); renderSkills(); toast(t ? 'הסקיל נטען ✓ — יופעל בהודעה הבאה' : 'נוסף, אבל לא מצאתי הוראות בריפו'); });
   });
-  function loadSkillText(it) {
+  /* ---------- in-app viewer: TikTok / Instagram embeds, GitHub README ---------- */
+  function embedUrl(u) {
+    var m = u.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/); if (m) return { src: 'https://www.tiktok.com/embed/v2/' + m[1], tall: true };
+    m = u.match(/instagram\.com\/(p|reel|tv)\/([\w-]+)/); if (m) return { src: 'https://www.instagram.com/' + m[1] + '/' + m[2] + '/embed/captioned/', tall: true };
+    return null;
+  }
+  function openViewer(it) {
+    var v = $('viewer'), b = $('vBody'); $('vH').textContent = it.name;
+    var used = (P().skills || []).some(function (x) { return x.id === it.id; });
+    var useBtn = it.idea ? '' : '<button class="btn ' + (used ? 'ghost' : 'primary') + ' sm" type="button" id="vUse">' + (used ? '✓ בשימוש בבנייה' : '✓ השתמש בבנייה') + '</button>';
+    var ext = '<a class="link" href="' + esc(it.url) + '" target="_blank" rel="noopener noreferrer">פתיחה באתר המקורי ↗</a>';
+    if (it.kind === 'tiktok' || it.kind === 'instagram') {
+      var em = embedUrl(it.url);
+      b.innerHTML = (it.desc ? '<p class="muted">' + esc(it.desc) + '</p>' : '') + (em ? '<div class="embed"><iframe src="' + esc(em.src) + '" title="' + esc(it.name) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>' : '<p class="muted">את הקישור הזה אי אפשר להציג בתוך האפליקציה.</p>') + '<div class="vrow">' + ext + '</div>';
+    } else {
+      b.innerHTML = '<p class="muted">' + esc(it.desc || '') + (it.stars ? ' · ★ ' + it.stars.toLocaleString('he-IL') : '') + '</p><div class="vrow">' + useBtn + ext + '</div><div class="readme"><div class="loading"><div class="skel"></div><div class="skel"></div></div></div>';
+      loadSkillText(it, 20000).then(function (t) { var r = b.querySelector('.readme'); if (r) r.innerHTML = t ? '<div class="m ai" style="max-width:100%">' + md(t.replace(/^---[\s\S]*?---\n/, '')) + '</div>' : '<p class="muted">לא נמצא README בריפו הזה.</p>'; });
+    }
+    var ub = $('vUse'); if (ub) ub.onclick = function () { v.close(); var btn = $('sres').querySelector('[data-use="' + (window.CSS && CSS.escape ? CSS.escape(it.id) : it.id) + '"]'); if (btn) btn.click(); };
+    if (!v.open) v.showModal();
+  }
+  $('vClose').onclick = function () { $('viewer').close(); };
+  $('viewer').addEventListener('close', function () { $('vBody').innerHTML = ''; });
+  function loadSkillText(it, max) {
+    max = max || 6000;
     var cands = it.path ? [it.path] : ['SKILL.md', 'README.md', 'readme.md'];
     var br = it.branch || 'HEAD';
     return cands.reduce(function (pr, f) { return pr.then(function (got) { if (got) return got; return fetch('https://raw.githubusercontent.com/' + it.repo + '/' + br + '/' + f).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }); }); }, Promise.resolve(''))
-      .then(function (t) { return t ? t.slice(0, 6000) + (t.length > 6000 ? '\n…(קוצר)' : '') : ''; });
-  }
-
-  /* ================= CLAUDE ACCOUNT MODE (no API key) ================= */
-  // Builds the full instruction and opens it in the user's own claude.ai account; answers are pasted back for preview.
-  var WEB_RULES = '\n\nחשוב: כתוב כל קובץ במלואו בבלוק שמתחיל ב-```file:שם-הקובץ (למשל ```file:index.html), כדי שאוכל להדביק את התשובה בחזרה בסטודיו ולראות תצוגה חיה.';
-  function buildPrompt(p, text, first) {
-    if (!first) return text;
-    var sys = system(Object.assign({}, p, { files: trimFiles(p.files) }));
-    return sys + WEB_RULES + '\n\n---\n\n' + text;
-  }
-  function trimFiles(f) { var o = {}, n = 0; Object.keys(f).forEach(function (k) { if (n < 20000) { o[k] = f[k]; n += f[k].length; } }); return o; }
-  function copyText(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(function () { var a = d.createElement('textarea'); a.value = t; d.body.appendChild(a); a.select(); try { d.execCommand('copy'); } catch (e) {} a.remove(); }); }
-  function openClaude(t) { var u = 'https://claude.ai/new' + (t.length < 6000 ? '?q=' + encodeURIComponent(t) : ''); window.open(u, '_blank', 'noopener'); }
-  function webSend(text, opts, first) {
-    var p = P(); if (!p) return; opts = opts || {};
-    var fresh = first || !p.webStarted, prompt = buildPrompt(p, text, fresh);
-    p.msgs.push({ role: 'user', text: text, show: opts.show });
-    var id = uid();
-    copyText(prompt);
-    if (fresh) { p.webStarted = true; openClaude(prompt); }
-    p.msgs.push({ role: 'note', id: id, prompt: prompt, text: fresh
-      ? 'פתחתי את Claude בחלון חדש עם ההוראה המלאה (היא גם הועתקה — אם לא הופיעה, הדביקו עם Ctrl+V). כשהוא מסיים: מעתיקים את כל התשובה ולוחצים **📋 הדבקת תשובה מ-Claude** כדי לראות כאן תצוגה חיה.'
-      : 'ההודעה הועתקה ✓ הדביקו אותה באותה שיחה ב-Claude, ואחר כך הדביקו את התשובה כאן עם **📋 הדבקת תשובה מ-Claude**.' });
-    p.updated = Date.now(); saveProjects(); renderMsgs();
-  }
-  function pasteReply() {
-    var read = navigator.clipboard && navigator.clipboard.readText ? navigator.clipboard.readText() : Promise.reject();
-    read.catch(function () { return prompt('הדביקו כאן את התשובה של Claude:') || ''; }).then(function (t) {
-      t = String(t || '').trim(); if (!t) { toast('הלוח ריק — העתיקו קודם את התשובה ב-Claude'); return; }
-      var p = P(), parsed = parseFiles(t), files = parsed.files;
-      if (!Object.keys(files).length) { // fallback: ```html … ``` or a raw html document
-        var m = t.match(/```(?:html)?\s*\n([\s\S]*?<\/html>)\s*```/i) || t.match(/(<!doctype html[\s\S]*<\/html>)/i);
-        if (m) files = { 'index.html': m[1] };
-      }
-      var n = Object.keys(files).length;
-      if (!n) { toast('לא מצאתי קבצים בתשובה. בקשו מ-Claude לכתוב כל קובץ בבלוק ```file:שם'); return; }
-      p.files = Object.assign({}, p.files, files);
-      var extra = cat(p.cat).mode === 'files' && files['plan.json'] ? planHtml(files['plan.json']) : '';
-      p.msgs.push({ role: 'note', text: '✓ הודבקו ' + n + ' קבצים מ-Claude: ' + Object.keys(files).map(function (f) { return '`' + f + '`'; }).join(', '), extra: extra });
-      p.updated = Date.now(); saveProjects(); renderMsgs(); renderFiles(); S.file = htmlEntry() || Object.keys(files)[0];
-      if (htmlEntry()) { setView('preview'); renderPreview(); } else setView('code');
-      if (innerWidth <= 760 && !extra) setPane('build');
-    });
+      .then(function (t) { return t ? t.slice(0, max) + (t.length > max ? '\n…(קוצר)' : '') : ''; });
   }
 
   /* ================= SETTINGS ================= */
   function openSettings() {
-    $('keyMask').textContent = S.key ? S.key.slice(0, 10) + '…' + S.key.slice(-4) : 'חשבון Claude שלך (בלי מפתח)';
-    $('changeKey').textContent = S.key ? 'החלפת מפתח' : 'חיבור מפתח API לבנייה חיה';
+    $('keyMask').textContent = S.key ? 'מפתח משלך: ' + S.key.slice(0, 10) + '…' + S.key.slice(-4) : 'Claude של הסטודיו' + (S.left != null ? ' · נשארו ' + S.left + ' הודעות היום' : '');
+    $('changeKey').textContent = S.key ? 'הסרת המפתח שלי' : 'מפתח Claude משלי (בלי הגבלה)';
     $('modelSet').innerHTML = $('modelIn').innerHTML; $('modelSet').value = S.model;
     $('acctTxt').textContent = (S.user && S.user.name || '') + (S.user && S.user.ghLogin ? ' · @' + S.user.ghLogin + (S.user.ghToken ? ' (GitHub מחובר)' : '') : '');
     renderMcp();
@@ -722,8 +713,8 @@
     $('mcpList').innerHTML = S.mcp.length ? S.mcp.map(function (x, i) { return '<div class="mcpi"><input type="checkbox" data-mcpon="' + i + '" ' + (x.on !== false ? 'checked' : '') + ' aria-label="הפעלה"><b>' + esc(x.name) + '</b><span>' + esc(x.url) + '</span><button class="icon" type="button" data-mcpdel="' + i + '" aria-label="מחיקה" style="width:30px;height:30px">✕</button></div>'; }).join('') : '<p class="muted">אין שרתים עדיין.</p>';
   }
   $('modelSet').onchange = function () { S.model = this.value; LS.set('model', S.model); toast('המודל עודכן'); };
-  $('changeKey').onclick = function () { $('settings').close(); S.key = ''; S.web = false; LS.set('key', null); LS.set('web', false); next(); };
-  $('logoutBtn').onclick = function () { if (!confirm('לצאת? המפתח והחיבור ל-GitHub יימחקו מהמכשיר הזה (הפרויקטים נשארים).')) return; $('settings').close(); S.user = null; S.key = ''; S.web = false; LS.set('user', null); LS.set('key', null); LS.set('web', false); next(); };
+  $('changeKey').onclick = function () { $('settings').close(); if (S.key) { S.key = ''; LS.set('key', null); toast('חזרת ל-Claude של הסטודיו'); return; } $('modelIn').value = S.model; show('scKey'); };
+  $('logoutBtn').onclick = function () { if (!confirm('לצאת? המפתח והחיבור ל-GitHub יימחקו מהמכשיר הזה (הפרויקטים נשארים).')) return; $('settings').close(); S.user = null; S.key = ''; LS.set('user', null); LS.set('key', null); next(); };
   $('reinstall').onclick = function () { $('settings').close(); LS.set('skipInstall', false); show('scInstall'); };
   $('mcpAdd').onclick = function () {
     var n = $('mcpName').value.trim().replace(/[^A-Za-z0-9_-]/g, ''), u = $('mcpUrl').value.trim(), t = $('mcpTok').value.trim();

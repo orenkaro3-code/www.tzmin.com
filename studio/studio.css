@@ -205,3 +205,11 @@ dialog.sheet::backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6p
 
 .m.note{background:rgba(255,255,255,.04);border-style:dashed}
 .notebtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.viewer{width:min(720px,calc(100% - 24px))}
+.viewer .embed{border-radius:18px;overflow:hidden;border:1px solid var(--stroke);background:#000;height:min(70dvh,740px)}
+.viewer .embed iframe{width:100%;height:100%;border:0}
+.viewer .vrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.viewer .readme{max-height:55dvh;overflow:auto;margin-top:6px}
+.viewer h2{font-size:1.05rem;direction:ltr;text-align:start;unicode-bidi:plaintext;word-break:break-word}
+.leftchip{white-space:nowrap}
+@media (max-width:760px){.bar .leftchip{display:none}}

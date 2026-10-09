@@ -56,22 +56,20 @@
 <section class="screen center" id="scKey" hidden>
   <div class="glass card glow narrow">
     <div class="orb sm" aria-hidden="true"><span></span></div>
-    <h1>מחברים את Claude</h1>
-    <button class="btn primary big" type="button" id="webMode" style="width:100%">✦ עבודה עם חשבון Claude שלי</button>
-    <p class="muted" style="margin:0;font-size:.85rem">בלי מפתח ובלי תשלום נוסף — הסטודיו מכין את ההוראה ופותח אותה ב-claude.ai, ואת התשובה מדביקים בחזרה לתצוגה חיה.</p>
-    <div class="or"><span>או בנייה חיה בתוך הסטודיו</span></div>
-    <p class="lead" style="font-size:.9rem">מפתח API — נשמר <b>רק במכשיר שלך</b> ונשלח ישירות ל-Anthropic.</p>
+    <h1>מפתח Claude משלך</h1>
+    <p class="lead">לא חובה. הסטודיו כבר עובד עם Claude שלנו עם מכסה יומית. עם מפתח משלך אין הגבלה, ואפשר גם Opus. המפתח נשמר <b>רק במכשיר שלך</b>.</p>
     <form id="keyForm" class="form" novalidate>
       <label for="keyIn">Claude API key</label>
       <input class="in mono" id="keyIn" type="password" dir="ltr" autocomplete="off" placeholder="sk-ant-...">
       <label for="modelIn">מודל</label>
       <select class="in" id="modelIn">
         <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — מהיר וחזק (מומלץ)</option>
-        <option value="claude-opus-5-5">Claude Opus 5.5 — הכי חכם לפרויקטים מורכבים</option>
+        <option value="claude-opus-5-5">Claude Opus 5.5 — הכי חכם (רק עם מפתח משלך)</option>
         <option value="claude-haiku-5-5">Claude Haiku 5.5 — הכי זול ומהיר</option>
       </select>
       <p class="err" id="keyErr" role="alert"></p>
       <button class="btn big" type="submit" id="keyBtn">חיבור ובדיקה</button>
+      <button class="btn ghost" type="button" id="keySkip">חזרה בלי מפתח</button>
       <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">איפה משיגים מפתח? ← console.anthropic.com</a>
     </form>
   </div>
@@ -81,6 +79,7 @@
 <section class="screen" id="scHome" hidden>
   <header class="bar glass">
     <div class="brand"><span class="dotlogo" aria-hidden="true"></span>Studio</div>
+    <span class="chip leftchip" hidden></span>
     <div class="who" id="whoBox"></div>
     <button class="icon" type="button" data-open="settings" aria-label="הגדרות">⚙︎</button>
   </header>
@@ -107,6 +106,7 @@
   <header class="bar glass">
     <button class="icon" type="button" id="backBtn" aria-label="חזרה">→</button>
     <div class="ptitle"><b id="pTitle"></b><small id="pCat"></small></div>
+    <span class="chip leftchip" hidden></span>
     <nav class="mtabs" aria-label="תצוגה">
       <button type="button" data-pane="chat" aria-pressed="true">צ׳אט</button>
       <button type="button" data-pane="build" aria-pressed="false">בנייה</button>
@@ -156,6 +156,14 @@
     </section>
   </div>
 </section>
+
+<!-- IN-APP VIEWER (TikTok / Instagram / GitHub) -->
+<dialog class="glass sheet viewer" id="viewer" aria-labelledby="vH">
+  <div class="sheet-in">
+    <div class="shead"><h2 id="vH"></h2><button class="icon" type="button" id="vClose" aria-label="סגירה">✕</button></div>
+    <div id="vBody"></div>
+  </div>
+</dialog>
 
 <!-- SETTINGS -->
 <dialog class="glass sheet" id="settings" aria-labelledby="setH">

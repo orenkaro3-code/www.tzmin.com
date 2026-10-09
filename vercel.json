@@ -1,1 +1,1 @@
-{"framework": null, "buildCommand": "", "installCommand": "", "outputDirectory": ".", "functions": {"api/insights.js": {"maxDuration": 60}}}
+{"framework": null, "buildCommand": "", "installCommand": "", "outputDirectory": ".", "functions": {"api/insights.js": {"maxDuration": 60}, "api/studio-claude.js": {"maxDuration": 300}}}

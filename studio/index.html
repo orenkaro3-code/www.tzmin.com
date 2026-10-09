@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a12">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TAZMIN Studio</title>
+<link rel="manifest" href="/studio/manifest.webmanifest">
+<link rel="icon" href="/studio/icon-192.png">
+<link rel="apple-touch-icon" href="/studio/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/studio/studio.css">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- 1. INSTALL -->
+<section class="screen center" id="scInstall" hidden>
+  <div class="glass card hero glow">
+    <div class="orb" aria-hidden="true"><span></span></div>
+    <p class="eyebrow">TAZMIN STUDIO</p>
+    <h1>הסטודיו שבונה איתך.</h1>
+    <p class="lead">בוחרים מה עושים, כותבים רעיון — ו-Claude מחפש סקילים ב-GitHub, השראה בטיקטוק ובאינסטגרם, ובונה מול העיניים.</p>
+    <button class="btn primary big" type="button" id="installBtn">⬇ התקנה לשורת המשימות</button>
+    <div class="steps" id="installHelp" hidden></div>
+    <button class="link" type="button" id="skipInstall">להמשיך בדפדפן בלי להתקין</button>
+  </div>
+</section>
+
+<!-- 2. LOGIN -->
+<section class="screen center" id="scLogin" hidden>
+  <div class="glass card glow narrow">
+    <div class="orb sm" aria-hidden="true"><span></span></div>
+    <h1>כניסה</h1>
+    <p class="lead">עם GitHub הסטודיו יחפש סקילים ו-MCP גם בריפוזיטורים שלך.</p>
+    <button class="btn gh big" type="button" id="ghLogin"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.87 2.34.67.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg> כניסה עם GitHub</button>
+    <div class="or"><span>או</span></div>
+    <form id="nameForm" class="form" novalidate>
+      <label for="nameIn">שם משתמש</label>
+      <input class="in" id="nameIn" autocomplete="nickname" maxlength="40" placeholder="איך לקרוא לך?">
+      <label for="ghUserIn">שם המשתמש שלך ב-GitHub <small>(לא חובה — לחיפוש בריפוזיטורים הציבוריים שלך)</small></label>
+      <input class="in" id="ghUserIn" dir="ltr" autocomplete="off" maxlength="39" placeholder="username">
+      <p class="err" id="loginErr" role="alert"></p>
+      <button class="btn primary big" type="submit">המשך</button>
+    </form>
+  </div>
+</section>
+
+<!-- 3. CLAUDE KEY -->
+<section class="screen center" id="scKey" hidden>
+  <div class="glass card glow narrow">
+    <div class="orb sm" aria-hidden="true"><span></span></div>
+    <h1>מחברים את Claude</h1>
+    <p class="lead">כל משתמש מחבר מפתח משלו. המפתח נשמר <b>רק במכשיר שלך</b> ונשלח ישירות ל-Anthropic — לא לשרת שלנו.</p>
+    <form id="keyForm" class="form" novalidate>
+      <label for="keyIn">Claude API key</label>
+      <input class="in mono" id="keyIn" type="password" dir="ltr" autocomplete="off" placeholder="sk-ant-...">
+      <label for="modelIn">מודל</label>
+      <select class="in" id="modelIn">
+        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — מהיר וחזק (מומלץ)</option>
+        <option value="claude-opus-5-5">Claude Opus 5.5 — הכי חכם לפרויקטים מורכבים</option>
+        <option value="claude-haiku-5-5">Claude Haiku 5.5 — הכי זול ומהיר</option>
+      </select>
+      <p class="err" id="keyErr" role="alert"></p>
+      <button class="btn primary big" type="submit" id="keyBtn">חיבור ובדיקה</button>
+      <a class="link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">איפה משיגים מפתח? ← console.anthropic.com</a>
+    </form>
+  </div>
+</section>
+
+<!-- 4. HOME -->
+<section class="screen" id="scHome" hidden>
+  <header class="bar glass">
+    <div class="brand"><span class="dotlogo" aria-hidden="true"></span>Studio</div>
+    <div class="who" id="whoBox"></div>
+    <button class="icon" type="button" data-open="settings" aria-label="הגדרות">⚙︎</button>
+  </header>
+  <main class="home">
+    <h1 class="greet" id="greet">מה בונים היום?</h1>
+    <div class="cats" id="cats" role="radiogroup" aria-label="מה עושים"></div>
+    <form class="prompt glass glow" id="ideaForm">
+      <label class="sr" for="ideaIn">הרעיון שלך</label>
+      <textarea id="ideaIn" rows="3" placeholder="כתבו את הרעיון… למשל: משחק ריצה עם חתול שאוסף דגים"></textarea>
+      <div class="prow">
+        <span class="chip" id="catChip">בחרו קטגוריה</span>
+        <button class="btn primary" type="submit" id="ideaBtn">✦ התחל</button>
+      </div>
+    </form>
+    <section class="recent" aria-labelledby="recentH">
+      <h2 id="recentH">פרויקטים אחרונים</h2>
+      <div class="plist" id="plist"></div>
+    </section>
+  </main>
+</section>
+
+<!-- 5. WORKSPACE -->
+<section class="screen work" id="scWork" hidden>
+  <header class="bar glass">
+    <button class="icon" type="button" id="backBtn" aria-label="חזרה">→</button>
+    <div class="ptitle"><b id="pTitle"></b><small id="pCat"></small></div>
+    <nav class="mtabs" aria-label="תצוגה">
+      <button type="button" data-pane="chat" aria-pressed="true">צ׳אט</button>
+      <button type="button" data-pane="build" aria-pressed="false">בנייה</button>
+      <button type="button" data-pane="skills" aria-pressed="false">סקילים</button>
+    </nav>
+    <button class="icon" type="button" data-open="settings" aria-label="הגדרות">⚙︎</button>
+  </header>
+  <div class="panes">
+    <section class="pane glass" id="paneChat" aria-label="צ׳אט עם Claude">
+      <div class="phead"><span class="spark" aria-hidden="true"></span> Claude <small id="mcpBadge"></small></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="tools" id="catTools"></div>
+      <form class="compose" id="chatForm">
+        <label class="sr" for="chatIn">הודעה ל-Claude</label>
+        <textarea id="chatIn" rows="1" placeholder="מה לשנות? מה להוסיף?"></textarea>
+        <button class="btn primary" type="submit" id="sendBtn" aria-label="שליחה">↑</button>
+      </form>
+    </section>
+    <section class="pane glass" id="paneBuild" aria-label="בנייה">
+      <div class="phead">
+        <div class="seg" role="tablist">
+          <button type="button" role="tab" data-view="preview" aria-selected="true">תצוגה</button>
+          <button type="button" role="tab" data-view="code" aria-selected="false">קוד</button>
+        </div>
+        <div class="files" id="fileTabs"></div>
+        <div class="acts">
+          <button class="btn ghost sm" type="button" id="openBtn" disabled>פתיחה ↗</button>
+          <button class="btn ghost sm" type="button" id="zipBtn" disabled>הורדה</button>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="preview" id="preview"><div class="empty"><div class="orb sm" aria-hidden="true"><span></span></div><p>מה ש-Claude בונה יופיע כאן.</p></div></div>
+        <pre class="code" id="code" hidden><code id="codeEl"></code></pre>
+      </div>
+      <div class="buildbar" id="buildBar" hidden><span class="pulse" aria-hidden="true"></span><span id="buildTxt">כותב קוד…</span></div>
+    </section>
+    <section class="pane glass" id="paneSkills" aria-label="חיפוש סקילים">
+      <div class="phead"><span>חיפוש סקילים והשראה</span></div>
+      <div class="seg wide" role="tablist" id="srcTabs">
+        <button type="button" role="tab" data-src="mine" aria-selected="true">שלי</button>
+        <button type="button" role="tab" data-src="github" aria-selected="false">GitHub</button>
+        <button type="button" role="tab" data-src="tiktok" aria-selected="false">TikTok</button>
+        <button type="button" role="tab" data-src="instagram" aria-selected="false">Instagram</button>
+      </div>
+      <div class="sres" id="sres"></div>
+      <p class="hint" id="skillHint">סמנו סקילים ב-✓ — Claude ישתמש בהם בבנייה.</p>
+    </section>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<dialog class="glass sheet" id="settings" aria-labelledby="setH">
+  <form method="dialog" class="sheet-in">
+    <div class="shead"><h2 id="setH">הגדרות</h2><button class="icon" value="close" aria-label="סגירה">✕</button></div>
+    <section>
+      <h3>Claude</h3>
+      <div class="row"><span id="keyMask" class="mono"></span><button class="btn ghost sm" type="button" id="changeKey">החלפת מפתח</button></div>
+      <label for="modelSet">מודל</label><select class="in" id="modelSet"></select>
+    </section>
+    <section>
+      <h3>שרתי MCP</h3>
+      <p class="muted">שרתי MCP מרוחקים (https) ש-Claude יוכל להשתמש בכלים שלהם בצ׳אט. מצאתם MCP בחיפוש? הדביקו כאן את כתובת השרת שלו.</p>
+      <div id="mcpList"></div>
+      <div class="mcpadd">
+        <input class="in" id="mcpName" placeholder="שם (למשל github)" dir="ltr" aria-label="שם השרת">
+        <input class="in" id="mcpUrl" placeholder="https://…/mcp" dir="ltr" aria-label="כתובת השרת">
+        <input class="in" id="mcpTok" type="password" placeholder="טוקן (לא חובה)" dir="ltr" aria-label="טוקן">
+        <button class="btn primary sm" type="button" id="mcpAdd">הוספה</button>
+      </div>
+    </section>
+    <section>
+      <h3>חשבון</h3>
+      <div class="row"><span id="acctTxt"></span><button class="btn ghost sm" type="button" id="logoutBtn">יציאה</button></div>
+      <button class="btn ghost sm" type="button" id="reinstall">התקנת האפליקציה לשורת המשימות</button>
+    </section>
+  </form>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="/studio/studio.js" defer></script>
+</body>
+</html>
